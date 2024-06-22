@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>To-Do List</h1>
+        <div class="todo-form">
+            <input type="text" id="title" placeholder="Title">
+            <textarea id="description" placeholder="Description"></textarea>
+            <button onclick="addTodo()">Add To-Do</button>
+        </div>
+        <div id="todo-list" class="todo-list"></div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', loadTodos);
+
+		function loadTodos() {
+		    fetch('/api/todo')
+		        .then(response => response.json())
+		        .then(data => {
+		            const todoList = document.getElementById('todo-list');
+		            todoList.innerHTML = '';
+		            data.forEach(todo => {
+		                const todoItem = document.createElement('div');
+		                todoItem.className = 'todo-item';
+
+		                // Determine the image based on the completed status
+		                const imgSrc = todo.completed ? '/img/ok.png' : '/img/no.png';
+
+		                todoItem.innerHTML = `
+		                    <h2>${todo.title}</h2>
+		                    <p>${todo.description}</p>
+		                    <button onclick="editTodo(${todo.id})">Edit</button>
+		                    <button onclick="deleteTodo(${todo.id})">Delete</button>
+		                    <button onclick="successTodo(${todo.id})">Success</button>
+		                    <div class='isCompleted'>
+		                        <img src="${imgSrc}" alt="${todo.completed ? 'Completed' : 'Not Completed'}">
+		                    </div>
+		                `;
+		                todoList.appendChild(todoItem);
+		            });
+		        });
+		}
+
+        function addTodo() {
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            
+            fetch('/api/todo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, description, completed: false }),
+            }).then(() => {
+                loadTodos();
+                document.getElementById('title').value = '';
+                document.getElementById('description').value = '';
+            });
+        }
+
+        async function editTodo(id) {
+			const data = await getTodo(id);
+			
+			if(data.completed === true) {
+				return alert('이미 완료되었습니다.');
+			}
+			
+            const title = prompt('Enter new title:');
+            const description = prompt('Enter new description:');
+			
+            fetch(`/api/todo/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, description }),
+            }).then(() => loadTodos());
+        }
+
+		async function successTodo(id) {
+			let title = '';
+			let description = '';
+			
+			const data = await getTodo(id);
+			console.log(data);
+			title = data.title;
+			description = data.description;
+			
+		    fetch(`/api/todo/${id}`, {
+		        method: 'PUT',
+		        headers: {
+		            'Content-Type': 'application/json',
+		        },
+		        body: JSON.stringify({ title, description, completed: true  }),
+		    }).then(() => loadTodos());
+		}
+		
+		async function getTodo(id) {
+			const response = await fetch(`/api/todo/${id}`, { method: 'GET' });
+			const data = await response.json();
+			console.log(data);
+			return data;
+		}
+		
+        function deleteTodo(id) {
+            fetch(`/api/todo/${id}`, { method: 'DELETE' })
+                .then(() => loadTodos());
+        }
+    </script>
+</body>
+</html>
