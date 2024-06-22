@@ -20,33 +20,42 @@
     <script>
         document.addEventListener('DOMContentLoaded', loadTodos);
 
-		function loadTodos() {
-		    fetch('/api/todo')
-		        .then(response => response.json())
-		        .then(data => {
-		            const todoList = document.getElementById('todo-list');
-		            todoList.innerHTML = '';
-		            data.forEach(todo => {
-		                const todoItem = document.createElement('div');
-		                todoItem.className = 'todo-item';
+        function loadTodos() {
+            fetch('/api/todo')
+                .then(response => response.json())
+                .then(data => {
+                    const todoList = document.getElementById('todo-list');
+                    todoList.innerHTML = '';
+                    data.forEach(todo => {
+                        const todoItem = document.createElement('div');
+                        todoItem.className = 'todo-item';
+                        
+                        const imgSrc = todo.completed ? '/img/ok.png' : '/img/no.png';
 
-		                // Determine the image based on the completed status
-		                const imgSrc = todo.completed ? '/img/ok.png' : '/img/no.png';
-
-		                todoItem.innerHTML = `
-		                    <h2>${todo.title}</h2>
-		                    <p>${todo.description}</p>
-		                    <button onclick="editTodo(${todo.id})">Edit</button>
-		                    <button onclick="deleteTodo(${todo.id})">Delete</button>
-		                    <button onclick="successTodo(${todo.id})">Success</button>
-		                    <div class='isCompleted'>
-		                        <img src="${imgSrc}" alt="${todo.completed ? 'Completed' : 'Not Completed'}">
-		                    </div>
-		                `;
-		                todoList.appendChild(todoItem);
-		            });
-		        });
-		}
+                        todoItem.innerHTML = `
+                            <h2 id="title-${todo.id}">${todo.title}</h2>
+                            <div id="edit-title-form-${todo.id}" class="edit-form" style="display:none;">
+                                <input type="text" id="edit-title-input-${todo.id}" placeholder="New Title" class="edit-input">
+                                <button onclick="submitEditTitle(${todo.id})">Submit</button>
+                                <button onclick="cancelEdit(${todo.id})">Cancel</button>
+                            </div>
+                            <p id="description-${todo.id}">${todo.description}</p>
+                            <div id="edit-description-form-${todo.id}" class="edit-form" style="display:none;">
+                                <input id="edit-description-input-${todo.id}" placeholder="New Description" class="edit-input"></textarea>
+                                <button onclick="submitEditDescription(${todo.id})">Submit</button>
+                                <button onclick="cancelEdit(${todo.id})">Cancel</button>
+                            </div>
+                            <button onclick="showEditForm(${todo.id})">Edit</button>
+                            <button onclick="deleteTodo(${todo.id})">Delete</button>
+                            <button onclick="successTodo(${todo.id})">Success</button>
+                            <div class='isCompleted'>
+                                <img src="${imgSrc}" alt="${todo.completed ? 'Completed' : 'Not Completed'}">
+                            </div>
+                        `;
+                        todoList.appendChild(todoItem);
+                    });
+                });
+        }
 
         function addTodo() {
             const title = document.getElementById('title').value;
@@ -65,50 +74,73 @@
             });
         }
 
-        async function editTodo(id) {
-			const data = await getTodo(id);
-			
-			if(data.completed === true) {
-				return alert('이미 완료되었습니다.');
-			}
-			
-            const title = prompt('Enter new title:');
-            const description = prompt('Enter new description:');
-			
+        function showEditForm(id) {
+            const editTitleForm = document.getElementById(`edit-title-form-${id}`);
+            editTitleForm.style.display = 'block';
+        }
+
+        function cancelEdit(id) {
+            const editTitleForm = document.getElementById(`edit-title-form-${id}`);
+            const editDescriptionForm = document.getElementById(`edit-description-form-${id}`);
+            editTitleForm.style.display = 'none';
+            editDescriptionForm.style.display = 'none';
+        }
+
+        async function submitEditTitle(id) {
+            const title = document.getElementById(`edit-title-input-${id}`).value;
+
+            const data = await getTodo(id);
+            const description = data.description;
+
             fetch(`/api/todo/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ title, description }),
+            }).then(() => {
+                document.getElementById(`title-${id}`).textContent = title;
+                document.getElementById(`edit-title-form-${id}`).style.display = 'none';
+                document.getElementById(`edit-description-form-${id}`).style.display = 'block';
+            });
+        }
+
+        function submitEditDescription(id) {
+			const title = document.getElementById(`edit-title-input-${id}`).value;
+            const description = document.getElementById(`edit-description-input-${id}`).value;
+
+            fetch(`/api/todo/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, description }),
+            }).then(() => {
+                document.getElementById(`description-${id}`).textContent = description;
+                document.getElementById(`edit-description-form-${id}`).style.display = 'none';
+            });
+        }
+
+        async function successTodo(id) {
+            const data = await getTodo(id);
+            const title = data.title;
+            const description = data.description;
+
+            fetch(`/api/todo/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, description, completed: true }),
             }).then(() => loadTodos());
         }
 
-		async function successTodo(id) {
-			let title = '';
-			let description = '';
-			
-			const data = await getTodo(id);
-			console.log(data);
-			title = data.title;
-			description = data.description;
-			
-		    fetch(`/api/todo/${id}`, {
-		        method: 'PUT',
-		        headers: {
-		            'Content-Type': 'application/json',
-		        },
-		        body: JSON.stringify({ title, description, completed: true  }),
-		    }).then(() => loadTodos());
-		}
-		
-		async function getTodo(id) {
-			const response = await fetch(`/api/todo/${id}`, { method: 'GET' });
-			const data = await response.json();
-			console.log(data);
-			return data;
-		}
-		
+        async function getTodo(id) {
+            const response = await fetch(`/api/todo/${id}`, { method: 'GET' });
+            const data = await response.json();
+            return data;
+        }
+
         function deleteTodo(id) {
             fetch(`/api/todo/${id}`, { method: 'DELETE' })
                 .then(() => loadTodos());
