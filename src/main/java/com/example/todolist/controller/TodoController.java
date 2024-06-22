@@ -18,16 +18,11 @@ public class TodoController {
 
     @GetMapping
     public List<Todo> getTodosByUserId(@RequestParam String userId) {
-    	
-    	System.out.println("getTodosByUserId");
         return todoService.getTodosByUserId(userId);
     }
     
     @GetMapping("/{id}")
     public ResponseEntity<Todo> getTodoById(@PathVariable Long id) {
-    	
-    	System.out.println("getTodoById");
-    	
         Optional<Todo> todo = todoService.getTodoById(id);
         return todo.map(ResponseEntity::ok)
                    .orElseGet(() -> ResponseEntity.notFound().build());

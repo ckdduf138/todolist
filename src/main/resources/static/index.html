@@ -44,7 +44,7 @@
                         const imgSrc = todo.completed ? '/img/ok.png' : '/img/no.png';
 
                         todoItem.innerHTML = `
-							<h2>${todo.title}</h2>
+							<h2 id="title-${todo.id}">${todo.title}</h2>
                             <div id="edit-title-form-${todo.id}" class="edit-form" style="display:none;">
                                 <input type="text" id="edit-title-input-${todo.id}" placeholder="New Title" class="edit-input">
                                 <button onclick="submitEditTitle(${todo.id})">Submit</button>
@@ -99,6 +99,7 @@
         }
 
         async function submitEditTitle(id) {
+			const userId = localStorage.getItem('userId');
             const title = document.getElementById(`edit-title-input-${id}`).value;
             const data = await getTodo(id);
             const description = data.description;
@@ -108,7 +109,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ title, description }),
+                body: JSON.stringify({ userId, title, description }),
             }).then(() => {
                 document.getElementById(`title-${id}`).textContent = title;
                 document.getElementById(`edit-title-form-${id}`).style.display = 'none';
@@ -117,6 +118,7 @@
         }
 
         function submitEditDescription(id) {
+			const userId = localStorage.getItem('userId');
             const title = document.getElementById(`edit-title-input-${id}`).value;
             const description = document.getElementById(`edit-description-input-${id}`).value;
 
@@ -125,7 +127,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ title, description }),
+                body: JSON.stringify({ userId, title, description }),
             }).then(() => {
                 document.getElementById(`description-${id}`).textContent = description;
                 document.getElementById(`edit-description-form-${id}`).style.display = 'none';
@@ -133,6 +135,7 @@
         }
 
         async function successTodo(id) {
+			const userId = localStorage.getItem('userId');
             const data = await getTodo(id);
             const title = data.title;
             const description = data.description;
@@ -142,7 +145,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ title, description, completed: true }),
+                body: JSON.stringify({ userId, title, description, completed: true }),
             }).then(() => loadTodos());
         }
 
