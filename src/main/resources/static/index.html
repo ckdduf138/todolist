@@ -9,6 +9,7 @@
 <body>
     <div class="container">
         <h1>To-Do List</h1>
+		<h2 id="userIdHeader"></h2>
         <div class="todo-form">
             <input type="text" id="title" placeholder="Title">
             <textarea id="description" placeholder="Description"></textarea>
@@ -20,8 +21,18 @@
     <script>
         document.addEventListener('DOMContentLoaded', loadTodos);
 
-        function loadTodos() {
-            fetch('/api/todo')
+        function loadTodos() {		
+			const userId = localStorage.getItem('userId');	
+			const userIdHeader = document.getElementById('userIdHeader');
+			userIdHeader.textContent = "사용자 아아디: " + userId;
+			
+            if (!userId) {
+                alert('로그인이 필요합니다.');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            fetch(`/api/todo?userId=${userId}`)
                 .then(response => response.json())
                 .then(data => {
                     const todoList = document.getElementById('todo-list');
@@ -33,7 +44,7 @@
                         const imgSrc = todo.completed ? '/img/ok.png' : '/img/no.png';
 
                         todoItem.innerHTML = `
-                            <h2 id="title-${todo.id}">${todo.title}</h2>
+							<h2>${todo.title}</h2>
                             <div id="edit-title-form-${todo.id}" class="edit-form" style="display:none;">
                                 <input type="text" id="edit-title-input-${todo.id}" placeholder="New Title" class="edit-input">
                                 <button onclick="submitEditTitle(${todo.id})">Submit</button>
@@ -58,6 +69,7 @@
         }
 
         function addTodo() {
+			const userId = localStorage.getItem('userId');
             const title = document.getElementById('title').value;
             const description = document.getElementById('description').value;
             
@@ -66,7 +78,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ title, description, completed: false }),
+                body: JSON.stringify({ userId, title, description, completed: false }),
             }).then(() => {
                 loadTodos();
                 document.getElementById('title').value = '';
@@ -88,7 +100,6 @@
 
         async function submitEditTitle(id) {
             const title = document.getElementById(`edit-title-input-${id}`).value;
-
             const data = await getTodo(id);
             const description = data.description;
 
@@ -106,7 +117,7 @@
         }
 
         function submitEditDescription(id) {
-			const title = document.getElementById(`edit-title-input-${id}`).value;
+            const title = document.getElementById(`edit-title-input-${id}`).value;
             const description = document.getElementById(`edit-description-input-${id}`).value;
 
             fetch(`/api/todo/${id}`, {

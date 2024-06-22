@@ -12,6 +12,7 @@ public class Todo {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    private String userId;
     private String title;
     private String description;
     private boolean completed;
@@ -26,6 +27,14 @@ public class Todo {
         this.id = id;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+    
     public String getTitle() {
         return title;
     }

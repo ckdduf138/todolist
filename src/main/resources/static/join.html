@@ -10,8 +10,8 @@
     <div class="container">
         <div id="register-form" class="form-container">
             <h2>회원가입</h2>
-            <form id="register-form">
-                <input type="text" id="register-username" placeholder="Username" required>
+            <form id="register-user-form">
+                <input type="text" id="register-userId" placeholder="userId" required>
                 <input type="password" id="register-password" placeholder="Password" required>
                 <input type="password" id="register-password-confirm" placeholder="Confirm Password" required>
                 <button type="submit">회원가입</button>
@@ -20,23 +20,37 @@
     </div>
 
     <script>
-        // 예시용 JavaScript 코드: 실제 서버와의 통신 및 회원가입 처리는 서버측에서 구현해야 합니다.
-        document.getElementById('register-form').addEventListener('submit', function(event) {
+        document.getElementById('register-user-form').addEventListener('submit', function(event) {
             event.preventDefault();
-            const username = document.getElementById('register-username').value;
+            const userId = document.getElementById('register-userId').value;
             const password = document.getElementById('register-password').value;
             const confirmPassword = document.getElementById('register-password-confirm').value;
 
-            // 간단한 클라이언트 측 유효성 검사 예시
             if (password !== confirmPassword) {
                 alert('Passwords do not match!');
                 return;
             }
 
-            // 실제 회원가입 처리 로직을 구현해야 합니다.
-            console.log('Username:', username);
-            console.log('Password:', password);
-            // 여기서 실제 서버와 통신하여 회원가입 요청을 처리합니다.
+            fetch('/api/user/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId, password }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to register user');
+                }
+                return response.json();
+            })
+            .then(data => {
+                window.location.href = '/index.html';
+            })
+            .catch(error => {
+                console.error('Error registering user:', error);
+                alert('회원가입 중 오류가 발생했습니다.');
+            });
         });
     </script>
 </body>

@@ -17,12 +17,17 @@ public class TodoController {
     private TodoService todoService;
 
     @GetMapping
-    public List<Todo> getAllTodos() {
-        return todoService.getAllTodos();
+    public List<Todo> getTodosByUserId(@RequestParam String userId) {
+    	
+    	System.out.println("getTodosByUserId");
+        return todoService.getTodosByUserId(userId);
     }
-
+    
     @GetMapping("/{id}")
     public ResponseEntity<Todo> getTodoById(@PathVariable Long id) {
+    	
+    	System.out.println("getTodoById");
+    	
         Optional<Todo> todo = todoService.getTodoById(id);
         return todo.map(ResponseEntity::ok)
                    .orElseGet(() -> ResponseEntity.notFound().build());
@@ -31,6 +36,7 @@ public class TodoController {
     @PostMapping
     public Todo createTodo(@RequestBody Todo todo) {
         todo.setIndate(LocalDateTime.now());
+        
         if (todo.isCompleted()) {
             todo.setDueDate(LocalDateTime.now());
         }
