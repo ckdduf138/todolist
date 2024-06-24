@@ -47,13 +47,21 @@ public class TodoController {
         todo.setId(id);
         todo.setIndate(existingTodo.get().getIndate());
 
+        System.out.println("수정할 일정 ID: " + id);
+        
         if (todo.isCompleted() && !existingTodo.get().isCompleted()) {
             todo.setDueDate(LocalDateTime.now());
         } else {
             todo.setDueDate(existingTodo.get().getDueDate());
         }
 
+        System.out.println("수정된 제목: " + todo.getTitle() + "(" + id + ")");
+        System.out.println("수정된 설명: " + todo.getDescription() + "(" + id + ")");
+        
         Todo updatedTodo = todoService.saveOrUpdate(todo);
+        
+        System.out.println("수정완료(" + id + ")");
+        
         return ResponseEntity.ok(updatedTodo);
     }
 
@@ -62,6 +70,9 @@ public class TodoController {
         if (!todoService.getTodoById(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
+        
+        System.out.println("삭제할 일정 ID: " + id);
+        
         todoService.deleteTodoById(id);
         return ResponseEntity.noContent().build();
     }
